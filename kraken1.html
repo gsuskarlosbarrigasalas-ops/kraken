@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Misión Cabo Peñas (Versión DUA y Lectura Fácil)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Tipografía de alta legibilidad recomendada para DUA y Lectura Fácil */
+    body {
+      font-family: 'Atkinson Hyperlegible', sans-serif;
+      background: radial-gradient(circle at top, #0c4a6e 0%, #082f49 50%, #041527 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+    }
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', sans-serif;
+      letter-spacing: 0.03em;
+    }
+    .wood-panel {
+      background: linear-gradient(135deg, #78350f 0%, #92400e 50%, #78350f 100%);
+      border: 4px solid #451a03;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), 0 8px 16px rgba(0,0,0,0.4);
+    }
+    .tts-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background-color: #f59e0b;
+      color: #082f49;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      border: 2px solid #fef3c7;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 0.15s, background-color 0.15s;
+      cursor: pointer;
+    }
+    .tts-btn:hover {
+      background-color: #fbbf24;
+      transform: scale(1.05);
+    }
+    .tts-btn:active {
+      transform: scale(0.96);
+    }
+    /* Tarjetas de opción DUA */
+    .dua-option {
+      border: 3px solid #0284c7;
+      background-color: #082f49;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .dua-option:hover {
+      border-color: #fbbf24;
+      background-color: #0c4a6e;
+    }
+    .dua-option.selected {
+      border-color: #34d399;
+      background-color: #064e3b;
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.4);
+    }
+    @keyframes sonarPulse {
+      0% { transform: scale(0.4); opacity: 0.9; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    .sonar-wave {
+      animation: sonarPulse 2s infinite ease-out;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #certificate-card, #certificate-card * { visibility: visible; }
+      #certificate-card {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none !important;
+        border: 6px solid #0284c7 !important;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="p-3 md:p-6 select-none">
+
+  <!-- BARRA SUPERIOR DUA: AVATAR, PROGRESO, CONTROL DE VOZ Y CRONÓMETRO -->
+  <header id="game-header" class="hidden max-w-5xl mx-auto mb-6 wood-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <span id="header-avatar" class="text-4xl bg-sky-900 p-2 rounded-full border-2 border-amber-400">🐳</span>
+      <div>
+        <div class="text-xs uppercase tracking-wider text-amber-300 font-bold">Explorador / Exploradora</div>
+        <div class="font-display text-lg font-bold text-white"><span id="header-name">Jugador</span> • <span id="header-grade">3.º Primaria</span></div>
+      </div>
+    </div>
+
+    <!-- Indicador visual de pasos -->
+    <div class="flex items-center gap-2 bg-sky-950/90 px-4 py-2 rounded-xl border-2 border-sky-600">
+      <span class="text-xs font-bold text-sky-200 mr-1">RETO:</span>
+      <div id="step-indicators" class="flex gap-1.5"></div>
+    </div>
+
+    <!-- Control global de lectura en voz alta + Puntos + Tiempo -->
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="button" onclick="stopSpeech()" class="bg-sky-900 hover:bg-sky-800 border-2 border-sky-400 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1" title="Parar lectura en voz alta">
+        🔇 Parar voz
+      </button>
+      <div class="bg-amber-500/20 border-2 border-amber-400 px-3 py-1 rounded-xl text-center">
+        <div class="text-[10px] uppercase text-amber-200 font-bold">Puntos</div>
+        <div id="header-score" class="font-display text-xl font-bold text-amber-300">0</div>
+      </div>
+      <div class="bg-rose-950/90 border-2 border-rose-400 px-3 py-1 rounded-xl text-center">
+        <div class="text-[10px] uppercase text-rose-200 font-bold">Tiempo</div>
+        <div id="timer-display" class="font-display text-xl font-bold text-white">40:00</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto">
+
+    <!-- PANTALLA 0: BIENVENIDA EN LECTURA FÁCIL -->
+    <section id="screen-start" class="bg-sky-950/95 border-4 border-amber-400 rounded-3xl p-6 md:p-10 shadow-2xl">
+      <div class="text-center mb-8">
+        <div class="flex justify-center items-center gap-3 mb-3 flex-wrap">
+          <span class="bg-amber-400 text-sky-950 font-extrabold text-xs uppercase tracking-widest px-4 py-1.5 rounded-full">
+            Proyecto Asturias 2026-2027 • Accesible DUA
+          </span>
+          <button type="button" onclick="speakText('Bienvenido a la misión El Misterio del Kraken. Vas a subir al barco pesquero Cabo Peñas. Supera 6 retos en 40 minutos para ganar tu Carnet de Experto en Naturaleza. Escribe tu nombre, elige tu curso y escoge un dibujo marino para empezar.')" class="tts-btn">
+            🔊 Escuchar bienvenida
+          </button>
+        </div>
+
+        <h1 class="text-3xl md:text-5xl font-bold text-amber-300 drop-shadow mb-4">
+          ⚓ El Misterio del Kraken 🦑
+        </h1>
+
+        <!-- Caja de Lectura Fácil -->
+        <div class="bg-sky-900/80 border-2 border-sky-400 rounded-2xl p-5 max-w-2xl mx-auto text-left space-y-2 text-lg">
+          <p>🚢 Vas a subir al barco pesquero asturiano <strong>"Cabo Peñas"</strong>.</p>
+          <p>🎯 Tienes que superar <strong>6 retos</strong> sobre el mar y sus animales.</p>
+          <p>⏱️ Tienes <strong>40 minutos</strong> para jugar tranquilo.</p>
+          <p>🔊 Pulsa el botón amarillo <strong>Escuchar</strong> si quieres oír los textos.</p>
+          <p>🏆 Al terminar, ganarás tu <strong>Carnet de Experto en Naturaleza</strong>.</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 bg-sky-900/60 p-6 rounded-2xl border-2 border-sky-700 mb-8">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-amber-300 font-bold text-lg">1. ✏️ Escribe tu nombre:</label>
+            <button type="button" onclick="speakText('Paso 1. Escribe tu nombre en el recuadro y elige si estás en tercero o cuarto de primaria.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <input id="input-name" type="text" placeholder="Ejemplo: Marcos o Sofía" class="w-full px-4 py-3.5 rounded-xl bg-sky-950 border-2 border-sky-400 text-white text-lg font-bold focus:outline-none focus:border-amber-400" />
+          
+          <label class="block text-amber-300 font-bold text-lg mt-5 mb-2">2. 🎒 Elige tu curso:</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" onclick="selectGrade('3.º de Primaria'); speakText('Has elegido tercero de primaria')" id="btn-grade-3" class="grade-btn py-3.5 rounded-xl font-bold text-lg border-2 border-amber-400 bg-amber-500 text-sky-950 transition">
+              3.º Primaria
+            </button>
+            <button type="button" onclick="selectGrade('4.º de Primaria'); speakText('Has elegido cuarto de primaria')" id="btn-grade-4" class="grade-btn py-3.5 rounded-xl font-bold text-lg border-2 border-sky-500 bg-sky-950 text-sky-200 hover:border-amber-400 transition">
+              4.º Primaria
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-amber-300 font-bold text-lg">3. 🖼️ Elige tu dibujo marino:</label>
+            <button type="button" onclick="speakText('Paso 3. Toca el animal marino que más te guste para ponerlo en tu carnet.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-3 gap-3" id="avatar-selector">
+            <button type="button" onclick="selectAvatar('🐳', this); speakText('Cachalote')" class="avatar-opt p-3 rounded-xl bg-amber-500/30 border-2 border-amber-400 text-center transition">
+              <div class="text-4xl mb-1">🐳</div>
+              <div class="text-sm font-bold">Cachalote</div>
+            </button>
+            <button type="button" onclick="selectAvatar('🦑', this); speakText('Calamar gigante')" class="avatar-opt p-3 rounded-xl bg-sky-950 border-2 border-sky-600 text-center hover:border-amber-400 transition">
+              <div class="text-4xl mb-1">🦑</div>
+              <div class="text-sm font-bold">Calamar</div>
+            </button>
+            <button type="button" onclick="selectAvatar('🐬', this); speakText('Delfín')" class="avatar-opt p-3 rounded-xl bg-sky-950 border-2 border-sky-600 text-center hover:border-amber-400 transition">
+              <div class="text-4xl mb-1">🐬</div>
+              <div class="text-sm font-bold">Delfín</div>
+            </button>
+            <button type="button" onclick="selectAvatar('🐢', this); speakText('Tortuga marina')" class="avatar-opt p-3 rounded-xl bg-sky-950 border-2 border-sky-600 text-center hover:border-amber-400 transition">
+              <div class="text-4xl mb-1">🐢</div>
+              <div class="text-sm font-bold">Tortuga</div>
+            </button>
+            <button type="button" onclick="selectAvatar('🦈', this); speakText('Tiburón')" class="avatar-opt p-3 rounded-xl bg-sky-950 border-2 border-sky-600 text-center hover:border-amber-400 transition">
+              <div class="text-4xl mb-1">🦈</div>
+              <div class="text-sm font-bold">Tiburón</div>
+            </button>
+            <button type="button" onclick="selectAvatar('⛵', this); speakText('Barco pesquero')" class="avatar-opt p-3 rounded-xl bg-sky-950 border-2 border-sky-600 text-center hover:border-amber-400 transition">
+              <div class="text-4xl mb-1">⛵</div>
+              <div class="text-sm font-bold">Barco</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <button onclick="startGame()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-sky-950 font-display text-2xl font-bold px-10 py-4 rounded-2xl shadow-lg transform hover:scale-105 transition">
+          🚢 ¡EMPEZAR LA AVENTURA!
+        </button>
+        <p id="start-error" class="text-rose-300 font-bold text-lg mt-3 hidden">⚠️ ¡Falta tu nombre! Escríbelo arriba para subir al barco.</p>
+      </div>
+    </section>
+
+    <!-- RETO 1: EL BARCO PESQUERO Y LOS NUDOS (CON APOYOS VISUALES EN CADA PREGUNTA) -->
+    <section id="step-1" class="hidden bg-sky-950/95 border-4 border-teal-400 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b-2 border-sky-800 pb-4">
+        <div>
+          <span class="bg-teal-400 text-sky-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Reto 1 de 6 • El Barco Pesquero</span>
+          <h2 class="text-2xl md:text-3xl font-bold text-amber-300 mt-1">🚢 Conoce el barco "Cabo Peñas"</h2>
+        </div>
+        <button type="button" onclick="speakText('Reto 1. Conoce el barco Cabo Peñas. Mira el dibujo del barco y lee cada tarjeta. Toca la respuesta correcta en cada pregunta.')" class="tts-btn">
+          🔊 Escuchar instrucciones
+        </button>
+      </div>
+
+      <!-- Apoyo visual principal: Esquema claro del barco -->
+      <div class="bg-sky-900/80 rounded-2xl p-4 mb-6 border-2 border-sky-500">
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-bold text-amber-300">🗺️ Mapa visual del barco:</span>
+          <button type="button" onclick="speakText('Observa el barco. Delante está la proa. Detrás está la popa. Arriba está el puente de mando. A la izquierda está babor con luz roja.')" class="tts-btn">🔊 Escuchar mapa</button>
+        </div>
+        <svg viewBox="0 0 640 210" class="w-full max-w-2xl mx-auto h-auto">
+          <path d="M0 165 Q 80 150 160 165 T 320 165 T 480 165 T 640 165 L 640 210 L 0 210 Z" fill="#0284c7" opacity="0.6"/>
+          <!-- Casco -->
+          <path d="M110 115 L490 115 L540 160 L130 160 Z" fill="#1e3a8a" stroke="#f8fafc" stroke-width="3"/>
+          <!-- Luz roja babor -->
+          <circle cx="310" cy="138" r="12" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+          <!-- Cabina -->
+          <rect x="190" y="60" width="100" height="55" rx="8" fill="#f8fafc" stroke="#1e293b" stroke-width="3"/>
+          <rect x="205" y="72" width="28" height="22" fill="#38bdf8"/>
+          <rect x="245" y="72" width="28" height="22" fill="#38bdf8"/>
+          <!-- Mástil -->
+          <line x1="370" y1="20" x2="370" y2="115" stroke="#f59e0b" stroke-width="6"/>
+          <line x1="290" y1="65" x2="370" y2="30" stroke="#cbd5e1" stroke-width="2"/>
+          <line x1="370" y1="30" x2="490" y2="115" stroke="#cbd5e1" stroke-width="2"/>
+          <!-- Etiquetas grandes -->
+          <rect x="495" y="80" width="120" height="30" rx="8" fill="#f59e0b"/><text x="555" y="100" text-anchor="middle" fill="#082f49" font-weight="bold" font-size="14">➡️ DELANTE (1)</text>
+          <rect x="25" y="80" width="120" height="30" rx="8" fill="#f59e0b"/><text x="85" y="100" text-anchor="middle" fill="#082f49" font-weight="bold" font-size="14">⬅️ DETRÁS (2)</text>
+          <rect x="165" y="20" width="150" height="30" rx="8" fill="#38bdf8"/><text x="240" y="40" text-anchor="middle" fill="#082f49" font-weight="bold" font-size="14">🧠 CEREBRO (3)</text>
+        </svg>
+      </div>
+
+      <!-- PREGUNTAS CON APOYO VISUAL Y TARJETAS CLICABLES -->
+      <div class="space-y-6 mb-6">
+
+        <!-- Pregunta 1.1 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">👃🚢</span>
+              <p class="font-bold text-lg text-white">1. La parte de <strong>DELANTE</strong> del barco corta las olas. Se llama:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 1. La parte de delante del barco corta las olas. ¿Cómo se llama? Opción A: Popa. Opción B: Proa. Opción C: Babor.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r1q1', 'popa', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">⬅️ Popa</button>
+            <button type="button" onclick="selectCardOption('r1q1', 'proa', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">➡️ Proa</button>
+            <button type="button" onclick="selectCardOption('r1q1', 'babor', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🔴 Babor</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 1.2 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">⚙️🚤</span>
+              <p class="font-bold text-lg text-white">2. La parte de <strong>ATRÁS</strong> tiene el timón y la hélice. Se llama:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 2. La parte de atrás tiene el timón y la hélice. ¿Cómo se llama? Opción A: Popa. Opción B: Estribor. Opción C: Mástil.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r1q2', 'popa', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">⬅️ Popa</button>
+            <button type="button" onclick="selectCardOption('r1q2', 'estribor', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🟢 Estribor</button>
+            <button type="button" onclick="selectCardOption('r1q2', 'mastil', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🗼 Mástil</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 1.3 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🧠👨‍✈️</span>
+              <p class="font-bold text-lg text-white">3. Es el <strong>"cerebro"</strong> del barco. Desde aquí conduce el capitán:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 3. Es el cerebro del barco. Desde aquí conduce el capitán. Opción A: La bodega de hielo. Opción B: El puente de mando. Opción C: Las redes de pesca.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r1q3', 'bodega', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🧊 Bodega de hielo</button>
+            <button type="button" onclick="selectCardOption('r1q3', 'puente', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🧭 Puente de Mando</button>
+            <button type="button" onclick="selectCardOption('r1q3', 'redes', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🕸️ Redes de pesca</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 1.4 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">⬅️🔴</span>
+              <p class="font-bold text-lg text-white">4. Si miras hacia delante, el lado <strong>IZQUIERDO</strong> (con luz roja) es:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 4. Si miras hacia delante, el lado izquierdo con luz roja es: Opción A: Estribor. Opción B: Babor. Opción C: Proa.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r1q4', 'estribor', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">➡️ Estribor</button>
+            <button type="button" onclick="selectCardOption('r1q4', 'babor', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">⬅️🔴 Babor</button>
+            <button type="button" onclick="selectCardOption('r1q4', 'proa', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">⬆️ Proa</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 1.5 (Nudos) -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🪢🐍</span>
+              <p class="font-bold text-lg text-white">5. Es el <strong>"Nudo de Rescate"</strong> (la historia del lago y la serpiente). No se deshace:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 5. Es el nudo de rescate, con la historia del lago y la serpiente. Nunca se deshace. Opción A: Nudo en ocho. Opción B: As de guía. Opción C: Nudo llano.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r1q5', 'ocho', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">8️⃣ Nudo en Ocho</button>
+            <button type="button" onclick="selectCardOption('r1q5', 'as', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🆘 As de Guía</button>
+            <button type="button" onclick="selectCardOption('r1q5', 'llano', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🔗 Nudo Llano</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="r1-feedback" class="hidden p-4 rounded-xl mb-4 font-bold text-lg"></div>
+      <div class="flex justify-end">
+        <button onclick="checkStep1()" class="bg-teal-400 hover:bg-teal-300 text-sky-950 font-display text-xl font-bold px-8 py-4 rounded-2xl shadow-lg transition">
+          ✅ Comprobar y pasar al Reto 2 ➡️
+        </button>
+      </div>
+    </section>
+
+    <!-- RETO 2: LABERINTO SUBMARINO -->
+    <section id="step-2" class="hidden bg-sky-950/95 border-4 border-cyan-400 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b-2 border-sky-800 pb-4">
+        <div>
+          <span class="bg-cyan-400 text-sky-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Reto 2 de 6 • Laberinto Submarino</span>
+          <h2 class="text-2xl md:text-3xl font-bold text-amber-300 mt-1">🐳 Baja hasta el Calamar Gigante 🦑</h2>
+        </div>
+        <button type="button" onclick="speakText('Reto 2. Laberinto submarino. Ayuda al cachalote a bajar hasta el fondo oscuro donde vive el calamar gigante. Esquiva las rocas y las botellas de plástico. Usa los botones azules o las flechas del teclado.')" class="tts-btn">
+          🔊 Escuchar instrucciones
+        </button>
+      </div>
+
+      <div class="bg-sky-900/70 p-4 rounded-2xl border-2 border-cyan-600 mb-6 text-lg">
+        <p>🎯 <strong>Tu misión:</strong> Lleva al <strong>Cachalote (🐳)</strong> hasta el <strong>Calamar Gigante (🦑)</strong>.</p>
+        <p>🚫 <strong>Cuidado:</strong> No puedes pasar por las rocas (🪨) ni por la basura de plástico (🧴).</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 items-center">
+        <div class="md:col-span-2 flex flex-col items-center bg-slate-950 p-4 rounded-2xl border-2 border-cyan-400">
+          <div id="maze-grid" class="grid grid-cols-10 gap-1 bg-sky-950 p-2 rounded-xl"></div>
+          <!-- Botones grandes táctiles -->
+          <div class="mt-4 grid grid-cols-3 gap-2 w-48">
+            <div></div>
+            <button onclick="movePlayer(0, -1)" class="bg-cyan-500 hover:bg-cyan-400 text-sky-950 p-3.5 rounded-xl font-bold text-2xl shadow">⬆️</button>
+            <div></div>
+            <button onclick="movePlayer(-1, 0)" class="bg-cyan-500 hover:bg-cyan-400 text-sky-950 p-3.5 rounded-xl font-bold text-2xl shadow">⬅️</button>
+            <button onclick="movePlayer(0, 1)" class="bg-cyan-500 hover:bg-cyan-400 text-sky-950 p-3.5 rounded-xl font-bold text-2xl shadow">⬇️</button>
+            <button onclick="movePlayer(1, 0)" class="bg-cyan-500 hover:bg-cyan-400 text-sky-950 p-3.5 rounded-xl font-bold text-2xl shadow">➡️</button>
+          </div>
+        </div>
+
+        <!-- Apoyo visual de las capas del mar -->
+        <div class="space-y-3 text-base">
+          <div class="flex justify-between items-center">
+            <h3 class="font-display text-lg text-amber-300 font-bold">🌊 Capas del mar:</h3>
+            <button type="button" onclick="speakText('Capas del mar. Arriba está la zona con luz del sol. En medio hay poca luz. Abajo, a más de mil metros, hay oscuridad total. Allí vive el calamar gigante.')" class="tts-btn">🔊</button>
+          </div>
+          <div class="p-3 rounded-xl bg-sky-500/30 border-2 border-sky-400">
+            <strong>☀️ 1. Zona con Luz (0 - 200 m):</strong><br>Viven delfines y peces bonitos.
+          </div>
+          <div class="p-3 rounded-xl bg-blue-700/40 border-2 border-blue-400">
+            <strong>🌗 2. Zona con Poca Luz (200 - 1.000 m):</strong><br>Viven los peces linterna.
+          </div>
+          <div class="p-3 rounded-xl bg-indigo-950 border-2 border-amber-400">
+            <strong>🌑 3. Zona Oscura (1.000 - 3.000 m):</strong><br>¡Tu meta! Viven el cachalote y el calamar.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETO 3: DOCUMENTAL / SONAR / VÍDEO + PREGUNTAS CON APOYO VISUAL -->
+    <section id="step-3" class="hidden bg-sky-950/95 border-4 border-amber-400 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b-2 border-sky-800 pb-4">
+        <div>
+          <span class="bg-amber-400 text-sky-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Reto 3 de 6 • Documental y Radar</span>
+          <h2 class="text-2xl md:text-3xl font-bold text-amber-300 mt-1">📡 El Duelo en el Fondo del Mar</h2>
+        </div>
+        <button type="button" onclick="speakText('Reto 3. El duelo en el fondo del mar. Pulsa los tres botones del documental para ver y escuchar cómo pelean el cachalote y el calamar gigante. Después responde a las tres preguntas.')" class="tts-btn">
+          🔊 Escuchar instrucciones
+        </button>
+      </div>
+
+      <div class="flex flex-wrap gap-3 mb-4">
+        <button onclick="toggleMediaMode('sim')" id="btn-mode-sim" class="px-4 py-2.5 rounded-xl font-bold bg-amber-400 text-sky-950 border-2 border-amber-200">
+          📡 Documental Animado con Voz (Sin Internet)
+        </button>
+        <button onclick="toggleMediaMode('yt')" id="btn-mode-yt" class="px-4 py-2.5 rounded-xl font-bold bg-sky-900 text-white border-2 border-sky-500 hover:border-amber-400">
+          ▶️ Vídeos Reales de YouTube (Con Internet)
+        </button>
+      </div>
+
+      <!-- MODO A: DOCUMENTAL INTERACTIVO CON LECTURA AUTOMÁTICA -->
+      <div id="media-sim" class="bg-slate-950 border-2 border-emerald-400 rounded-2xl p-6 mb-6 relative overflow-hidden">
+        <div class="grid md:grid-cols-2 gap-6 items-center">
+          <div class="h-56 bg-gradient-to-b from-sky-950 to-black rounded-xl border-2 border-emerald-700 relative flex items-center justify-around p-4 overflow-hidden">
+            <div id="sonar-ping" class="hidden absolute left-1/3 w-16 h-16 rounded-full border-4 border-amber-400 sonar-wave"></div>
+            <div class="text-center z-10">
+              <div id="sim-whale" class="text-6xl transition-transform duration-500">🐳</div>
+              <div class="text-sm font-bold text-sky-300 mt-2">Cachalote<br>(Cazador)</div>
+            </div>
+            <div id="sim-action-badge" class="bg-emerald-950 border-2 border-emerald-400 text-emerald-300 text-sm font-bold px-3 py-2 rounded-xl text-center z-10">
+              👈 Pulsa una escena
+            </div>
+            <div class="text-center z-10">
+              <div id="sim-squid" class="text-6xl transition-transform duration-500">🦑</div>
+              <div class="text-sm font-bold text-rose-300 mt-2">Calamar<br>(Presa)</div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <button onclick="playDocScene(1)" class="w-full text-left p-3.5 rounded-xl bg-sky-900 hover:bg-sky-800 border-2 border-sky-500 transition">
+              <div class="font-bold text-amber-300 text-lg">🔊 Escena 1: El sonido fuerte del cachalote</div>
+              <div class="text-sm text-sky-100">Toca aquí para ver y escuchar.</div>
+            </button>
+            <button onclick="playDocScene(2)" class="w-full text-left p-3.5 rounded-xl bg-sky-900 hover:bg-sky-800 border-2 border-sky-500 transition">
+              <div class="font-bold text-rose-300 text-lg">⭕ Escena 2: La defensa del calamar gigante</div>
+              <div class="text-sm text-sky-100">Toca aquí para ver y escuchar.</div>
+            </button>
+            <button onclick="playDocScene(3)" class="w-full text-left p-3.5 rounded-xl bg-sky-900 hover:bg-sky-800 border-2 border-sky-500 transition">
+              <div class="font-bold text-emerald-300 text-lg">🔬 Escena 3: Las pistas en su estómago</div>
+              <div class="text-sm text-sky-100">Toca aquí para ver y escuchar.</div>
+            </button>
+            <div id="doc-caption" class="p-4 rounded-xl bg-emerald-950 border-2 border-emerald-400 text-base text-emerald-100 font-bold">
+              👆 Toca cada botón de arriba. El juego leerá la explicación en voz alta.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODO B: VÍDEOS YOUTUBE -->
+      <div id="media-yt" class="hidden grid md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-slate-900 p-3 rounded-2xl border-2 border-sky-600">
+          <div class="text-sm font-bold text-amber-300 mb-2">📺 Vídeo 1: Escultura en Asturias (Cachalote y Calamar)</div>
+          <div class="aspect-video rounded-xl overflow-hidden bg-black">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed?listType=search&list=ESCULTURA+Cachalote+contra+calamar+gigante+Asturias" title="Escultura Asturias" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border-2 border-sky-600">
+          <div class="text-sm font-bold text-amber-300 mb-2">📺 Vídeo 2: El Calamar Gigante en el fondo del mar</div>
+          <div class="aspect-video rounded-xl overflow-hidden bg-black">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed?listType=search&list=calamar+gigante+cachalote+documental+niños" title="Documental Calamar Gigante" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREGUNTAS CON APOYOS VISUALES Y LECTURA FÁCIL -->
+      <div class="space-y-6 mb-6">
+
+        <!-- Pregunta 3.1 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🔬🦜</span>
+              <p class="font-bold text-lg text-white">1. ¿Qué parte muy dura del calamar encontraron los científicos dentro del estómago del cachalote?</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 1. ¿Qué parte muy dura del calamar encontraron los científicos dentro del estómago del cachalote? Opción A: Sus huesos. Opción B: Su pico duro y afilado. Opción C: Sus aletas.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r3q1', 'huesos', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🦴 Sus huesos</button>
+            <button type="button" onclick="selectCardOption('r3q1', 'pico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🦜 Su pico duro</button>
+            <button type="button" onclick="selectCardOption('r3q1', 'aletas', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🐟 Sus aletas</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 3.2 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🐳🔊</span>
+              <p class="font-bold text-lg text-white">2. ¿Para qué hace el cachalote un <strong>sonido muy fuerte</strong> bajo el agua?</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 2. ¿Para qué hace el cachalote un sonido muy fuerte bajo el agua? Opción A: Para marear y aturdir al calamar. Opción B: Para avisar a los barcos. Opción C: Para dormir a los peces.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r3q2', 'aturdir', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">😵 Para marear al calamar</button>
+            <button type="button" onclick="selectCardOption('r3q2', 'barcos', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🚢 Para avisar a barcos</button>
+            <button type="button" onclick="selectCardOption('r3q2', 'dormir', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">💤 Para dormir peces</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 3.3 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">⭕🐳</span>
+              <p class="font-bold text-lg text-white">3. ¿Qué marcas deja el calamar gigante en la piel del cachalote cuando se defiende?</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 3. ¿Qué marcas deja el calamar gigante en la piel del cachalote cuando se defiende? Opción A: Rayas de tinta negra. Opción B: Cicatrices con forma de círculo. Opción C: Manchas de colores.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r3q3', 'tinta', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">➖ Rayas de tinta</button>
+            <button type="button" onclick="selectCardOption('r3q3', 'circulos', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">⭕ Cicatrices en círculo</button>
+            <button type="button" onclick="selectCardOption('r3q3', 'colores', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🎨 Manchas de colores</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="r3-feedback" class="hidden p-4 rounded-xl mb-4 font-bold text-lg"></div>
+      <div class="flex justify-end">
+        <button onclick="checkStep3()" class="bg-amber-400 hover:bg-amber-300 text-sky-950 font-display text-xl font-bold px-8 py-4 rounded-2xl shadow-lg transition">
+          ✅ Comprobar y pasar al Reto 4 ➡️
+        </button>
+      </div>
+    </section>
+
+    <!-- RETO 4: SOPA DE LETRAS CON APOYOS VISUALES EN CADA PALABRA -->
+    <section id="step-4" class="hidden bg-sky-950/95 border-4 border-emerald-400 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b-2 border-sky-800 pb-4">
+        <div>
+          <span class="bg-emerald-400 text-sky-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Reto 4 de 6 • Sopa de Letras</span>
+          <h2 class="text-2xl md:text-3xl font-bold text-amber-300 mt-1">🔤 Busca las 6 Palabras del Mar</h2>
+        </div>
+        <button type="button" onclick="speakText('Reto 4. Sopa de letras. Busca las 6 palabras escondidas. Toca la primera letra de la palabra y después toca su última letra. Puedes pulsar en cada palabra de la lista para escucharla.')" class="tts-btn">
+          🔊 Escuchar instrucciones
+        </button>
+      </div>
+
+      <div class="bg-sky-900/70 p-4 rounded-2xl border-2 border-emerald-500 mb-6 text-lg">
+        <p>👉 <strong>Paso 1:</strong> Busca una palabra de la lista derecha en el cuadro de letras.</p>
+        <p>👉 <strong>Paso 2:</strong> Toca su <strong>primera letra</strong> y luego toca su <strong>última letra</strong>.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 items-start">
+        <div class="md:col-span-2 flex justify-center bg-slate-950 p-4 rounded-2xl border-2 border-emerald-400">
+          <div id="wordsearch-grid" class="grid grid-cols-10 gap-1"></div>
+        </div>
+
+        <div class="bg-sky-900/70 p-5 rounded-2xl border-2 border-sky-600">
+          <h3 class="font-display text-lg text-amber-300 font-bold mb-3">📋 Palabras (toca 🔊 para oír):</h3>
+          <ul id="word-list" class="space-y-2.5 font-bold text-base"></ul>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-6">
+        <button id="btn-step4-next" onclick="goToStep(5)" class="hidden bg-emerald-400 hover:bg-emerald-300 text-sky-950 font-display text-xl font-bold px-8 py-4 rounded-2xl shadow-lg transition">
+          🎉 ¡Genial! Pasar al Reto 5 ➡️
+        </button>
+      </div>
+    </section>
+
+    <!-- RETO 5: PUZLE CON APOYO VISUAL -->
+    <section id="step-5" class="hidden bg-sky-950/95 border-4 border-purple-400 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b-2 border-sky-800 pb-4">
+        <div>
+          <span class="bg-purple-400 text-sky-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Reto 5 de 6 • Puzle Visual</span>
+          <h2 class="text-2xl md:text-3xl font-bold text-amber-300 mt-1">🧩 Ordena la Imagen del Océano</h2>
+        </div>
+        <button type="button" onclick="speakText('Reto 5. Ordena la imagen del océano. Toca una pieza desordenada y después toca otra pieza para cambiarlas de sitio. Ordénalas del número 1 al número 9 mirando el modelo de la derecha.')" class="tts-btn">
+          🔊 Escuchar instrucciones
+        </button>
+      </div>
+
+      <div class="bg-sky-900/70 p-4 rounded-2xl border-2 border-purple-400 mb-6 text-lg">
+        <p>🔄 Toca <strong>una pieza</strong> y luego toca <strong>otra pieza</strong> para cambiarlas de lugar.</p>
+        <p>🔢 Ordénalas del <strong>1 al 9</strong> igual que en el dibujo pequeño de la derecha.</p>
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center justify-center gap-8 my-4">
+        <div id="puzzle-board" class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-2xl border-4 border-purple-400 w-80 h-80"></div>
+
+        <div class="bg-sky-900/80 p-5 rounded-2xl border-2 border-sky-500 max-w-xs text-center">
+          <div class="text-amber-300 font-bold text-lg mb-2">👀 Modelo correcto (1 al 9):</div>
+          <div class="grid grid-cols-3 gap-1.5 text-sm font-bold bg-sky-950 p-3 rounded-xl border border-sky-600 mb-3">
+            <div class="p-2 bg-sky-700 rounded">1 ☀️</div>
+            <div class="p-2 bg-sky-700 rounded">2 ⛵</div>
+            <div class="p-2 bg-sky-700 rounded">3 🌊</div>
+            <div class="p-2 bg-blue-800 rounded">4 🐳</div>
+            <div class="p-2 bg-blue-800 rounded">5 💥</div>
+            <div class="p-2 bg-blue-800 rounded">6 🦑</div>
+            <div class="p-2 bg-indigo-950 rounded">7 ⚓</div>
+            <div class="p-2 bg-indigo-950 rounded">8 🐚</div>
+            <div class="p-2 bg-indigo-950 rounded">9 🪸</div>
+          </div>
+          <p id="puzzle-msg" class="text-base text-purple-200 font-bold">Toca dos piezas para cambiarlas.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-4">
+        <button id="btn-step5-next" onclick="goToStep(6)" class="hidden bg-purple-400 hover:bg-purple-300 text-sky-950 font-display text-xl font-bold px-8 py-4 rounded-2xl shadow-lg transition">
+          🎉 ¡Puzle listo! Ir al Reto Final ➡️
+        </button>
+      </div>
+    </section>
+
+    <!-- RETO 6: LOS 5 OCÉANOS Y CÁLCULOS CON APOYOS VISUALES EN TODAS LAS PREGUNTAS -->
+    <section id="step-6" class="hidden bg-sky-950/95 border-4 border-amber-400 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b-2 border-sky-800 pb-4">
+        <div>
+          <span class="bg-amber-400 text-sky-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">Reto 6 de 6 • Prueba Final</span>
+          <h2 class="text-2xl md:text-3xl font-bold text-amber-300 mt-1">🌍 Los 5 Océanos y Retos de Números</h2>
+        </div>
+        <button type="button" onclick="speakText('Reto 6 y último. Lee o escucha cada pregunta, mira los dibujos de ayuda y elige la respuesta correcta para ganar tu carnet de experto.')" class="tts-btn">
+          🔊 Escuchar instrucciones
+        </button>
+      </div>
+
+      <div class="space-y-6 mb-6">
+
+        <!-- Pregunta 6.1 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🌍👑</span>
+              <p class="font-bold text-lg text-white">1. Es el océano <strong>MÁS GRANDE</strong> del planeta Tierra. Allí está la Fosa de las Marianas:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 1. Es el océano más grande del planeta Tierra. Allí está la Fosa de las Marianas. Opción A: Océano Atlántico. Opción B: Océano Pacífico. Opción C: Océano Ártico.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r6q1', 'atlantico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🌊 Océano Atlántico</button>
+            <button type="button" onclick="selectCardOption('r6q1', 'pacifico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">👑 Océano Pacífico</button>
+            <button type="button" onclick="selectCardOption('r6q1', 'artico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🧊 Océano Ártico</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 6.2 -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🧭❄️</span>
+              <p class="font-bold text-lg text-white">2. Está en el <strong>Polo Norte</strong>, es el más pequeño y tiene mucho hielo:</p>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 2. Está en el Polo Norte, es el océano más pequeño y tiene mucho hielo. Opción A: Océano Índico. Opción B: Océano Ártico. Opción C: Océano Antártico.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r6q2', 'indico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🐠 Océano Índico</button>
+            <button type="button" onclick="selectCardOption('r6q2', 'artico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🧊 Océano Ártico</button>
+            <button type="button" onclick="selectCardOption('r6q2', 'antartico', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">🐧 Océano Antártico</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 6.3 (Matemáticas con apoyo visual de suma) -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">🐳⬇️</span>
+              <div>
+                <p class="font-bold text-lg text-white">3. Un cachalote baja <strong>450 metros</strong> y luego baja <strong>1.385 metros</strong> más.</p>
+                <p class="text-amber-300 font-bold text-base">💡 Pista visual: Suma 450 + 1.385 metros.</p>
+              </div>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 3. Un cachalote baja 450 metros y luego baja 1.385 metros más. ¿A qué profundidad llega? Suma 450 más 1.385. Opción A: 1.735 metros. Opción B: 1.835 metros. Opción C: 1.935 metros.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r6q3', '1735', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">📏 1.735 metros</button>
+            <button type="button" onclick="selectCardOption('r6q3', '1835', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">📏 1.835 metros</button>
+            <button type="button" onclick="selectCardOption('r6q3', '1935', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">📏 1.935 metros</button>
+          </div>
+        </div>
+
+        <!-- Pregunta 6.4 (Matemáticas con apoyo visual de ojos) -->
+        <div class="bg-sky-900/60 p-5 rounded-2xl border-2 border-sky-600">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-4xl bg-sky-950 p-2.5 rounded-xl border border-sky-500">👁️🍽️</span>
+              <div>
+                <p class="font-bold text-lg text-white">4. Un ojo de calamar gigante mide <strong>30 cm</strong> (como un plato).</p>
+                <p class="text-amber-300 font-bold text-base">💡 Pista visual: 👁️👁️👁️👁️👁️👁️👁️👁️ (8 ojos × 30 cm)</p>
+              </div>
+            </div>
+            <button type="button" onclick="speakText('Pregunta 4. Un ojo de calamar gigante mide 30 centímetros, como un plato grande. Si ponemos 8 ojos en fila, ¿cuántos centímetros miden? Multiplica 30 por 8. Opción A: 210 centímetros. Opción B: 240 centímetros. Opción C: 280 centímetros.')" class="tts-btn">🔊 Escuchar</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="selectCardOption('r6q4', '210', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">📐 210 cm</button>
+            <button type="button" onclick="selectCardOption('r6q4', '240', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">📐 240 cm</button>
+            <button type="button" onclick="selectCardOption('r6q4', '280', this)" class="dua-option p-3 rounded-xl text-center font-bold text-lg">📐 280 cm</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="r6-feedback" class="hidden p-4 rounded-xl mb-4 font-bold text-lg"></div>
+      <div class="flex justify-end">
+        <button onclick="checkStep6()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-sky-950 font-display text-2xl font-bold px-8 py-4 rounded-2xl shadow-xl transform hover:scale-105 transition">
+          🏆 ¡CONSEGUIR MI CARNET!
+        </button>
+      </div>
+    </section>
+
+    <!-- PANTALLA FINAL: CARNET OFICIAL -->
+    <section id="screen-certificate" class="hidden flex flex-col items-center">
+      <div class="text-center mb-6 no-print">
+        <h2 class="text-3xl md:text-4xl font-bold text-amber-300 mb-2">🎉 ¡FELICIDADES, EXPERTO/A! 🎉</h2>
+        <button type="button" onclick="speakText('¡Felicidades! Has superado todos los retos del mar Cantábrico y del abismo. Ya tienes tu Carnet Oficial de Experto en Naturaleza.')" class="tts-btn">
+          🔊 Escuchar felicitación
+        </button>
+      </div>
+
+      <div id="certificate-card" class="w-full max-w-2xl bg-gradient-to-br from-sky-50 via-white to-cyan-100 text-slate-900 rounded-3xl border-8 border-amber-500 shadow-2xl overflow-hidden">
+        <div class="bg-gradient-to-r from-sky-900 via-blue-800 to-teal-800 text-white p-5 flex items-center justify-between border-b-4 border-amber-400">
+          <div class="flex items-center gap-3">
+            <span class="text-4xl">⚓</span>
+            <div>
+              <div class="text-xs uppercase tracking-widest text-amber-300 font-extrabold">Proyecto Asturias 2026-2027</div>
+              <h3 class="font-display text-xl md:text-2xl font-bold tracking-wide">CARNET DE EXPERTO/A EN NATURALEZA</h3>
+            </div>
+          </div>
+          <span class="bg-amber-400 text-sky-950 text-xs font-black px-3 py-1 rounded-full">OFICIAL</span>
+        </div>
+
+        <div class="p-6 md:p-8 grid sm:grid-cols-3 gap-6 items-center">
+          <div class="flex flex-col items-center">
+            <div id="cert-avatar" class="w-28 h-28 rounded-2xl bg-gradient-to-b from-sky-200 to-cyan-300 border-4 border-sky-800 flex items-center justify-center text-6xl shadow-inner">
+              🐳
+            </div>
+            <div class="mt-3 bg-emerald-600 text-white text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow">
+              ✓ Retos Superados
+            </div>
+          </div>
+
+          <div class="sm:col-span-2 space-y-3">
+            <div class="border-b-2 border-sky-200 pb-1">
+              <div class="text-xs font-bold uppercase text-sky-700">Nombre:</div>
+              <div id="cert-name" class="font-display text-2xl font-bold text-sky-950">Nombre Alumno</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 border-b-2 border-sky-200 pb-2">
+              <div>
+                <div class="text-xs font-bold uppercase text-sky-700">Curso:</div>
+                <div id="cert-grade" class="font-bold text-base text-slate-800">3.º de Primaria</div>
+              </div>
+              <div>
+                <div class="text-xs font-bold uppercase text-sky-700">Misión:</div>
+                <div class="font-bold text-base text-teal-800">Barco Cabo Peñas y Océanos</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div class="bg-amber-100 border border-amber-400 rounded-xl p-2">
+                <div class="text-[10px] font-bold uppercase text-amber-800">Puntos</div>
+                <div id="cert-score" class="font-display text-xl font-bold text-amber-700">600 pts</div>
+              </div>
+              <div class="bg-sky-100 border border-sky-400 rounded-xl p-2">
+                <div class="text-[10px] font-bold uppercase text-sky-800">Tiempo</div>
+                <div id="cert-time" class="font-display text-xl font-bold text-sky-800">12:30</div>
+              </div>
+              <div class="bg-teal-100 border border-teal-400 rounded-xl p-2">
+                <div class="text-[10px] font-bold uppercase text-teal-800">Fecha</div>
+                <div id="cert-date" class="font-bold text-xs text-teal-900 mt-1">2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-sky-900 text-sky-100 px-6 py-3 text-xs flex flex-wrap justify-between items-center gap-2">
+          <span>🚢 Tripulación del Pesquero "Cabo Peñas" • Guardián de los 5 Océanos</span>
+          <span class="font-bold text-amber-300">🦑 Kraken & Cachalote 🐳</span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-4 mt-8 no-print">
+        <button onclick="window.print()" class="bg-amber-400 hover:bg-amber-300 text-sky-950 font-display text-lg font-bold px-6 py-3.5 rounded-xl shadow-lg transition">
+          🖨️ Imprimir o Guardar en PDF
+        </button>
+        <button onclick="resetGame()" class="bg-sky-800 hover:bg-sky-700 text-white font-bold px-6 py-3.5 rounded-xl border border-sky-500 transition">
+          🔄 Volver a jugar
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- SISTEMA DE LECTURA EN VOZ ALTA (SÍNTESIS DE VOZ NATIVA DUA) ---
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.92; // Velocidad ligeramente pausada para Lectura Fácil
+      utterance.pitch = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stopSpeech() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    // --- ESTADO GLOBAL Y RESPUESTAS DE TARJETAS ---
+    let selectedAnswers = {};
+
+    function selectCardOption(questionKey, value, btnElement) {
+      selectedAnswers[questionKey] = value;
+      // Quitar selección previa en ese grupo
+      const parent = btnElement.parentElement;
+      parent.querySelectorAll('.dua-option').forEach(btn => btn.classList.remove('selected'));
+      btnElement.classList.add('selected');
+      // Leer en voz alta la opción elegida
+      speakText(btnElement.textContent.replace(/[^\p{L}\p{N}\s.,]/gu, '').trim());
+    }
+
+    let gameState = {
+      name: '',
+      grade: '3.º de Primaria',
+      avatar: '🐳',
+      score: 0,
+      currentStep: 0,
+      secondsLeft: 40 * 60
+    };
+
+    let timerInterval = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('krakenGameDUASave');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.name && parsed.currentStep > 0) {
+            gameState = parsed;
+            restoreSession();
+          }
+        } catch (e) {}
+      }
+    });
+
+    function saveProgress() {
+      localStorage.setItem('krakenGameDUASave', JSON.stringify(gameState));
+    }
+
+    function selectGrade(grade) {
+      gameState.grade = grade;
+      document.getElementById('btn-grade-3').className = grade.includes('3')
+        ? 'grade-btn py-3.5 rounded-xl font-bold text-lg border-2 border-amber-400 bg-amber-500 text-sky-950 transition'
+        : 'grade-btn py-3.5 rounded-xl font-bold text-lg border-2 border-sky-500 bg-sky-950 text-sky-200 hover:border-amber-400 transition';
+      document.getElementById('btn-grade-4').className = grade.includes('4')
+        ? 'grade-btn py-3.5 rounded-xl font-bold text-lg border-2 border-amber-400 bg-amber-500 text-sky-950 transition'
+        : 'grade-btn py-3.5 rounded-xl font-bold text-lg border-2 border-sky-500 bg-sky-950 text-sky-200 hover:border-amber-400 transition';
+    }
+
+    function selectAvatar(emoji, btn) {
+      gameState.avatar = emoji;
+      document.querySelectorAll('.avatar-opt').forEach(el => {
+        el.className = 'avatar-opt p-3 rounded-xl bg-sky-950 border-2 border-sky-600 text-center hover:border-amber-400 transition';
+      });
+      btn.className = 'avatar-opt p-3 rounded-xl bg-amber-500/30 border-2 border-amber-400 text-center transition';
+    }
+
+    function startGame() {
+      const nameVal = document.getElementById('input-name').value.trim();
+      if (!nameVal) {
+        document.getElementById('start-error').classList.remove('hidden');
+        speakText('Falta tu nombre. Escríbelo arriba para subir al barco.');
+        return;
+      }
+      gameState.name = nameVal;
+      gameState.score = 0;
+      gameState.secondsLeft = 40 * 60;
+      saveProgress();
+      setupHeader();
+      startTimer();
+      goToStep(1);
+    }
+
+    function restoreSession() {
+      setupHeader();
+      startTimer();
+      if (gameState.currentStep === 7) {
+        showCertificate();
+      } else {
+        goToStep(gameState.currentStep);
+      }
+    }
+
+    function setupHeader() {
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('game-header').classList.remove('hidden');
+      document.getElementById('header-name').textContent = gameState.name;
+      document.getElementById('header-grade').textContent = gameState.grade;
+      document.getElementById('header-avatar').textContent = gameState.avatar;
+      updateScoreDisplay();
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById('header-score').textContent = gameState.score;
+    }
+
+    function addScore(pts) {
+      gameState.score += pts;
+      updateScoreDisplay();
+      saveProgress();
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      updateTimerUI();
+      timerInterval = setInterval(() => {
+        if (gameState.secondsLeft > 0) {
+          gameState.secondsLeft--;
+          updateTimerUI();
+          if (gameState.secondsLeft % 10 === 0) saveProgress();
+        } else {
+          clearInterval(timerInterval);
+        }
+      }, 1000);
+    }
+
+    function updateTimerUI() {
+      const mins = Math.floor(gameState.secondsLeft / 60);
+      const secs = gameState.secondsLeft % 60;
+      document.getElementById('timer-display').textContent =
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function goToStep(stepNum) {
+      stopSpeech();
+      gameState.currentStep = stepNum;
+      saveProgress();
+
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`step-${i}`).classList.add('hidden');
+      }
+      document.getElementById('screen-certificate').classList.add('hidden');
+
+      const indContainer = document.getElementById('step-indicators');
+      indContainer.innerHTML = '';
+      for (let i = 1; i <= 6; i++) {
+        const dot = document.createElement('span');
+        dot.className = `w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+          i < stepNum ? 'bg-emerald-400 text-sky-950' :
+          i === stepNum ? 'bg-amber-400 text-sky-950 ring-2 ring-white' :
+          'bg-sky-800 text-sky-400'
+        }`;
+        dot.textContent = i;
+        indContainer.appendChild(dot);
+      }
+
+      document.getElementById(`step-${stepNum}`).classList.remove('hidden');
+
+      if (stepNum === 2) initMaze();
+      if (stepNum === 4) initWordSearch();
+      if (stepNum === 5) initPuzzle();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- RETO 1 ---
+    function checkStep1() {
+      const fb = document.getElementById('r1-feedback');
+      const { r1q1, r1q2, r1q3, r1q4, r1q5 } = selectedAnswers;
+
+      if (!r1q1 || !r1q2 || !r1q3 || !r1q4 || !r1q5) {
+        const msg = 'Faltan preguntas por responder. Toca una tarjeta en cada pregunta.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-amber-500/20 border-2 border-amber-400 text-amber-200';
+        fb.textContent = '⚠️ ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+        return;
+      }
+
+      if (r1q1 === 'proa' && r1q2 === 'popa' && r1q3 === 'puente' && r1q4 === 'babor' && r1q5 === 'as') {
+        const msg = '¡Muy bien! Has acertado todas las partes del barco. Pasamos al reto 2.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300';
+        fb.textContent = '🎉 ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+        addScore(100);
+        setTimeout(() => goToStep(2), 2000);
+      } else {
+        const msg = 'Revisa tus respuestas. Recuerda: delante es Proa, atrás es Popa, el cerebro es el Puente de Mando, izquierda es Babor y el nudo de rescate es As de Guía.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-rose-500/20 border-2 border-rose-400 text-rose-200';
+        fb.textContent = '❌ ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+      }
+    }
+
+    // --- RETO 2: LABERINTO ---
+    const mazeLayout = [
+      [0,0,1,0,0,0,1,0,0,0],
+      [1,0,1,0,1,0,1,0,1,0],
+      [0,0,0,0,1,0,0,0,1,0],
+      [0,1,1,1,1,1,1,0,1,0],
+      [0,0,0,0,0,0,1,0,0,0],
+      [1,1,1,1,1,0,1,1,1,0],
+      [0,0,0,0,1,0,0,0,0,0],
+      [0,1,1,0,1,1,1,1,1,0],
+      [0,1,0,0,0,0,0,0,1,0],
+      [0,0,0,1,1,1,1,0,0,2]
+    ];
+    let playerPos = { x: 0, y: 0 };
+    let mazeSolved = false;
+
+    function initMaze() {
+      playerPos = { x: 0, y: 0 };
+      mazeSolved = false;
+      renderMaze();
+    }
+
+    function renderMaze() {
+      const grid = document.getElementById('maze-grid');
+      grid.innerHTML = '';
+      for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+          const cell = document.createElement('div');
+          const bgDepth = y < 3 ? 'bg-sky-700' : y < 6 ? 'bg-blue-900' : 'bg-indigo-950';
+          cell.className = `w-7 h-7 sm:w-9 sm:h-9 rounded flex items-center justify-center text-lg sm:text-xl ${
+            mazeLayout[y][x] === 1 ? 'bg-slate-800 border border-slate-600' : bgDepth
+          }`;
+
+          if (x === playerPos.x && y === playerPos.y) {
+            cell.textContent = '🐳';
+          } else if (mazeLayout[y][x] === 1) {
+            cell.textContent = (x + y) % 2 === 0 ? '🪨' : '🧴';
+          } else if (mazeLayout[y][x] === 2) {
+            cell.textContent = '🦑';
+            cell.classList.add('ring-2', 'ring-amber-400', 'animate-pulse');
+          }
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function movePlayer(dx, dy) {
+      if (gameState.currentStep !== 2 || mazeSolved) return;
+      const nx = playerPos.x + dx;
+      const ny = playerPos.y + dy;
+      if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10 && mazeLayout[ny][nx] !== 1) {
+        playerPos = { x: nx, y: ny };
+        renderMaze();
+        if (mazeLayout[ny][nx] === 2) {
+          mazeSolved = true;
+          addScore(100);
+          speakText('¡Conseguido! Has llegado hasta el calamar gigante. Pasamos al reto 3.');
+          setTimeout(() => goToStep(3), 1200);
+        }
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (gameState.currentStep === 2) {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.preventDefault();
+          if (e.key === 'ArrowUp') movePlayer(0, -1);
+          if (e.key === 'ArrowDown') movePlayer(0, 1);
+          if (e.key === 'ArrowLeft') movePlayer(-1, 0);
+          if (e.key === 'ArrowRight') movePlayer(1, 0);
+        }
+      }
+    });
+
+    // --- RETO 3 ---
+    function toggleMediaMode(mode) {
+      if (mode === 'sim') {
+        document.getElementById('media-sim').classList.remove('hidden');
+        document.getElementById('media-yt').classList.add('hidden');
+        document.getElementById('btn-mode-sim').className = 'px-4 py-2.5 rounded-xl font-bold bg-amber-400 text-sky-950 border-2 border-amber-200';
+        document.getElementById('btn-mode-yt').className = 'px-4 py-2.5 rounded-xl font-bold bg-sky-900 text-white border-2 border-sky-500';
+      } else {
+        document.getElementById('media-sim').classList.add('hidden');
+        document.getElementById('media-yt').classList.remove('hidden');
+        document.getElementById('btn-mode-yt').className = 'px-4 py-2.5 rounded-xl font-bold bg-amber-400 text-sky-950 border-2 border-amber-200';
+        document.getElementById('btn-mode-sim').className = 'px-4 py-2.5 rounded-xl font-bold bg-sky-900 text-white border-2 border-sky-500';
+      }
+    }
+
+    function playDocScene(num) {
+      const ping = document.getElementById('sonar-ping');
+      const badge = document.getElementById('sim-action-badge');
+      const caption = document.getElementById('doc-caption');
+      const whale = document.getElementById('sim-whale');
+      const squid = document.getElementById('sim-squid');
+
+      ping.classList.add('hidden');
+      whale.style.transform = 'scale(1)';
+      squid.style.transform = 'scale(1)';
+
+      let textToRead = '';
+      if (num === 1) {
+        ping.classList.remove('hidden');
+        whale.style.transform = 'scale(1.2)';
+        badge.textContent = '🔊 ¡SONIDO FUERTE!';
+        textToRead = 'Escena 1. El cachalote hace un sonido muy fuerte bajo el agua para marear al calamar gigante.';
+      } else if (num === 2) {
+        squid.style.transform = 'scale(1.25) rotate(-10deg)';
+        badge.textContent = '⭕ ¡VENTOSAS Y PICO!';
+        textToRead = 'Escena 2. El calamar gigante se defiende con sus ventosas y deja cicatrices en forma de círculo en la piel del cachalote.';
+      } else if (num === 3) {
+        badge.textContent = '🔬 PISTAS CIENTÍFICAS';
+        textToRead = 'Escena 3. Los científicos encontraron el pico duro del calamar dentro del estómago del cachalote.';
+      }
+      caption.textContent = textToRead;
+      speakText(textToRead);
+    }
+
+    function checkStep3() {
+      const fb = document.getElementById('r3-feedback');
+      const { r3q1, r3q2, r3q3 } = selectedAnswers;
+
+      if (!r3q1 || !r3q2 || !r3q3) {
+        const msg = 'Faltan preguntas por responder. Toca una opción en cada pregunta.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-amber-500/20 border-2 border-amber-400 text-amber-200';
+        fb.textContent = '⚠️ ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+        return;
+      }
+
+      if (r3q1 === 'pico' && r3q2 === 'aturdir' && r3q3 === 'circulos') {
+        const msg = '¡Genial! Has acertado las tres pistas científicas. Pasamos al reto 4.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300';
+        fb.textContent = '🎉 ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+        addScore(100);
+        setTimeout(() => goToStep(4), 2000);
+      } else {
+        const msg = 'Alguna respuesta no es correcta. Toca los tres botones del documental de arriba para escuchar las pistas.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-rose-500/20 border-2 border-rose-400 text-rose-200';
+        fb.textContent = '❌ ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+      }
+    }
+
+    // --- RETO 4: SOPA DE LETRAS CON APOYOS VISUALES ---
+    const wsWords = [
+      { word: 'CACHALOTE', icon: '🐳', r1: 0, c1: 0, r2: 0, c2: 8 },
+      { word: 'KRAKEN', icon: '🦑', r1: 2, c1: 1, r2: 2, c2: 6 },
+      { word: 'VENTOSAS', icon: '⭕', r1: 4, c1: 2, r2: 4, c2: 9 },
+      { word: 'ABISMO', icon: '🌑', r1: 6, c1: 0, r2: 6, c2: 5 },
+      { word: 'SONAR', icon: '📡', r1: 8, c1: 4, r2: 8, c2: 8 },
+      { word: 'PROA', icon: '🚢', r1: 1, c1: 9, r2: 4, c2: 9 }
+    ];
+    let wsMatrix = [];
+    let wsStartCell = null;
+    let foundWords = [];
+
+    function initWordSearch() {
+      const letters = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+      wsMatrix = Array.from({ length: 10 }, () =>
+        Array.from({ length: 10 }, () => letters[Math.floor(Math.random() * letters.length)])
+      );
+      foundWords = [];
+      wsStartCell = null;
+
+      wsWords.forEach(item => {
+        for (let i = 0; i < item.word.length; i++) {
+          const r = item.r1 === item.r2 ? item.r1 : item.r1 + i;
+          const c = item.c1 === item.c2 ? item.c1 : item.c1 + i;
+          wsMatrix[r][c] = item.word[i];
+        }
+      });
+
+      renderWordSearch();
+    }
+
+    function renderWordSearch() {
+      const grid = document.getElementById('wordsearch-grid');
+      grid.innerHTML = '';
+
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 10; c++) {
+          const btn = document.createElement('button');
+          btn.id = `ws-${r}-${c}`;
+          btn.textContent = wsMatrix[r][c];
+          btn.className = 'w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-sky-900 hover:bg-sky-700 font-bold text-sm sm:text-base text-white border border-sky-600 transition';
+          btn.onclick = () => handleWsClick(r, c);
+          grid.appendChild(btn);
+        }
+      }
+
+      const list = document.getElementById('word-list');
+      list.innerHTML = wsWords.map(w => `
+        <li id="word-item-${w.word}" class="px-3 py-2 rounded-xl bg-sky-950 border-2 border-sky-600 flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <span class="text-xl">${w.icon}</span>
+            <span>${w.word}</span>
+          </span>
+          <button type="button" onclick="speakText('${w.word}')" class="bg-amber-400 text-sky-950 px-2 py-0.5 rounded-full text-xs font-bold">🔊</button>
+        </li>
+      `).join('');
+    }
+
+    function handleWsClick(r, c) {
+      const cellBtn = document.getElementById(`ws-${r}-${c}`);
+      if (!wsStartCell) {
+        wsStartCell = { r, c };
+        cellBtn.classList.add('bg-amber-400', 'text-sky-950');
+      } else {
+        const s = wsStartCell;
+        document.getElementById(`ws-${s.r}-${s.c}`).classList.remove('bg-amber-400', 'text-sky-950');
+        wsStartCell = null;
+
+        const match = wsWords.find(w =>
+          !foundWords.includes(w.word) &&
+          ((w.r1 === s.r && w.c1 === s.c && w.r2 === r && w.c2 === c) ||
+           (w.r2 === s.r && w.c2 === s.c && w.r1 === r && w.c1 === c))
+        );
+
+        if (match) {
+          foundWords.push(match.word);
+          speakText('¡Encontraste ' + match.word + '!');
+          for (let i = 0; i < match.word.length; i++) {
+            const mr = match.r1 === match.r2 ? match.r1 : match.r1 + i;
+            const mc = match.c1 === match.c2 ? match.c1 : match.c1 + i;
+            const el = document.getElementById(`ws-${mr}-${mc}`);
+            el.className = 'w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-emerald-400 text-sky-950 font-black text-sm sm:text-base border border-emerald-200';
+          }
+          const li = document.getElementById(`word-item-${match.word}`);
+          li.className = 'px-3 py-2 rounded-xl bg-emerald-500/30 border-2 border-emerald-400 text-emerald-300 line-through flex items-center justify-between';
+          li.innerHTML = `<span class="flex items-center gap-2"><span>${match.icon}</span><span>${match.word}</span></span><span>✅</span>`;
+
+          if (foundWords.length === wsWords.length) {
+            addScore(100);
+            speakText('¡Enhorabuena! Has encontrado todas las palabras. Pulsa el botón verde para seguir.');
+            document.getElementById('btn-step4-next').classList.remove('hidden');
+          }
+        }
+      }
+    }
+
+    // --- RETO 5: PUZLE ---
+    const puzzlePiecesData = [
+      { id: 1, icon: '☀️', label: 'Sol', bg: 'bg-sky-500' },
+      { id: 2, icon: '⛵', label: 'Barco', bg: 'bg-sky-600' },
+      { id: 3, icon: '🌊', label: 'Olas', bg: 'bg-sky-700' },
+      { id: 4, icon: '🐳', label: 'Cachalote', bg: 'bg-blue-800' },
+      { id: 5, icon: '💥', label: 'Duelo', bg: 'bg-indigo-800' },
+      { id: 6, icon: '🦑', label: 'Calamar', bg: 'bg-blue-900' },
+      { id: 7, icon: '⚓', label: 'Ancla', bg: 'bg-slate-800' },
+      { id: 8, icon: '🐚', label: 'Concha', bg: 'bg-slate-900' },
+      { id: 9, icon: '🪸', label: 'Coral', bg: 'bg-indigo-950' }
+    ];
+    let currentPuzzle = [];
+    let selectedPieceIndex = null;
+    let puzzleCompleted = false;
+
+    function initPuzzle() {
+      currentPuzzle = [...puzzlePiecesData].sort(() => Math.random() - 0.5);
+      if (currentPuzzle.every((p, idx) => p.id === idx + 1)) {
+        [currentPuzzle[0], currentPuzzle[1]] = [currentPuzzle[1], currentPuzzle[0]];
+      }
+      selectedPieceIndex = null;
+      puzzleCompleted = false;
+      renderPuzzle();
+    }
+
+    function renderPuzzle() {
+      const board = document.getElementById('puzzle-board');
+      board.innerHTML = '';
+      currentPuzzle.forEach((piece, index) => {
+        const div = document.createElement('button');
+        div.className = `${piece.bg} rounded-xl flex flex-col items-center justify-center p-1 border-2 transition ${
+          selectedPieceIndex === index ? 'border-amber-400 scale-95 ring-2 ring-amber-300' : 'border-white/30 hover:border-purple-300'
+        }`;
+        div.innerHTML = `
+          <span class="text-xs font-black bg-black/50 px-2 rounded text-amber-300 self-start">${piece.id}</span>
+          <span class="text-3xl">${piece.icon}</span>
+          <span class="text-xs font-bold text-white mt-0.5">${piece.label}</span>
+        `;
+        div.onclick = () => handlePieceClick(index);
+        board.appendChild(div);
+      });
+    }
+
+    function handlePieceClick(index) {
+      if (puzzleCompleted) return;
+      if (selectedPieceIndex === null) {
+        selectedPieceIndex = index;
+        renderPuzzle();
+      } else {
+        const temp = currentPuzzle[selectedPieceIndex];
+        currentPuzzle[selectedPieceIndex] = currentPuzzle[index];
+        currentPuzzle[index] = temp;
+        selectedPieceIndex = null;
+        renderPuzzle();
+
+        const isSolved = currentPuzzle.every((p, idx) => p.id === idx + 1);
+        if (isSolved) {
+          puzzleCompleted = true;
+          addScore(100);
+          const msg = '¡Puzle completado! Pulsa el botón morado para ir al último reto.';
+          document.getElementById('puzzle-msg').innerHTML = `<span class="text-emerald-300 font-bold">🎉 ${msg}</span>`;
+          speakText(msg);
+          document.getElementById('btn-step5-next').classList.remove('hidden');
+        }
+      }
+    }
+
+    // --- RETO 6 ---
+    function checkStep6() {
+      const fb = document.getElementById('r6-feedback');
+      const { r6q1, r6q2, r6q3, r6q4 } = selectedAnswers;
+
+      if (!r6q1 || !r6q2 || !r6q3 || !r6q4) {
+        const msg = 'Faltan preguntas por responder. Toca una tarjeta en cada pregunta.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-amber-500/20 border-2 border-amber-400 text-amber-200';
+        fb.textContent = '⚠️ ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+        return;
+      }
+
+      if (r6q1 === 'pacifico' && r6q2 === 'artico' && r6q3 === '1835' && r6q4 === '240') {
+        addScore(100);
+        clearInterval(timerInterval);
+        gameState.currentStep = 7;
+        saveProgress();
+        showCertificate();
+      } else {
+        const msg = 'Revisa tus respuestas. Recuerda: el océano más grande es el Pacífico, el del Polo Norte es el Ártico, 450 más 1.385 son 1.835 metros, y 30 por 8 son 240 centímetros.';
+        fb.className = 'p-4 rounded-xl mb-4 font-bold text-lg bg-rose-500/20 border-2 border-rose-400 text-rose-200';
+        fb.textContent = '❌ ' + msg;
+        fb.classList.remove('hidden');
+        speakText(msg);
+      }
+    }
+
+    // --- CERTIFICADO ---
+    function showCertificate() {
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`step-${i}`).classList.add('hidden');
+      }
+      document.getElementById('game-header').classList.add('hidden');
+      document.getElementById('screen-certificate').classList.remove('hidden');
+
+      document.getElementById('cert-name').textContent = gameState.name;
+      document.getElementById('cert-grade').textContent = gameState.grade;
+      document.getElementById('cert-avatar').textContent = gameState.avatar;
+      document.getElementById('cert-score').textContent = `${gameState.score} pts`;
+
+      const usedSeconds = (40 * 60) - gameState.secondsLeft;
+      const mins = Math.floor(usedSeconds / 60);
+      const secs = usedSeconds % 60;
+      document.getElementById('cert-time').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} min`;
+
+      const today = new Date();
+      document.getElementById('cert-date').textContent = today.toLocaleDateString('es-ES');
+      speakText('¡Felicidades ' + gameState.name + '! Ya tienes tu Carnet de Experto en Naturaleza.');
+    }
+
+    function resetGame() {
+      stopSpeech();
+      localStorage.removeItem('krakenGameDUASave');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
